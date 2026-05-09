@@ -87,6 +87,7 @@ export default function TransactionHistory() {
                   <th style={{ padding: '20px' }}>Status</th>
                   <th style={{ padding: '20px' }}>Total Amount</th>
                   <th style={{ padding: '20px' }}>Payment</th>
+                  <th style={{ padding: '20px' }}>Table</th>
                   <th style={{ padding: '20px' }}>Staff</th>
                   <th style={{ padding: '20px' }}>Action</th>
                 </tr>
@@ -117,8 +118,13 @@ export default function TransactionHistory() {
                         {tx.payment_method}
                       </div>
                     </td>
+                    <td style={{ padding: '20px', fontWeight: '600' }}>
+                      <span style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+                        #{tx.table_id || 'N/A'}
+                      </span>
+                    </td>
                     <td style={{ padding: '20px', fontSize: '14px' }}>
-                      {tx.employee?.username || (tx.table_id ? `Customer#${tx.table_id}` : 'System')}
+                      {tx.employee?.username || <span style={{ color: 'var(--text-muted)' }}>Customer</span>}
                     </td>
                     <td style={{ padding: '20px' }}>
                       <button 
@@ -142,7 +148,12 @@ export default function TransactionHistory() {
               <div style={{ padding: '30px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h3 style={{ fontSize: '20px', fontWeight: '700' }}>Order Management</h3>
-                  <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>#INV-{selectedTx.id.toString().padStart(5, '0')}</p>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '4px' }}>
+                    <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>#INV-{selectedTx.id.toString().padStart(5, '0')}</p>
+                    <span style={{ fontSize: '12px', fontWeight: '700', background: 'var(--primary)', color: 'white', padding: '2px 8px', borderRadius: '4px' }}>
+                      Table #{selectedTx.table_id}
+                    </span>
+                  </div>
                 </div>
                 <button onClick={() => setSelectedTx(null)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>
                   <X size={24} />

@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GlowPOS - Point of Sale System
 
-## Getting Started
+GlowPOS adalah sistem manajemen Point of Sale (POS) modern yang dibangun menggunakan Next.js. Proyek ini dirancang untuk memfasilitasi transaksi penjualan, manajemen inventaris, dan antarmuka pelanggan yang responsif.
 
-First, run the development server:
+## Deskripsi Proyek
+Proyek ini memiliki dua komponen utama:
+- **Admin Dashboard**: Digunakan oleh pemilik toko atau staf untuk mengelola produk, melihat riwayat transaksi, dan mengatur operasional toko.
+- **Customer Interface**: Antarmuka pelanggan untuk melakukan pemesanan (self-ordering) dengan dukungan pembayaran QRIS.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Fitur Utama
+- 🛒 **Manajemen Produk & Kategori**: Tambah, ubah, dan hapus produk dengan integrasi Cloudinary untuk penyimpanan gambar.
+- 📊 **Dashboard Admin**: Laporan penjualan dan statistik transaksi secara real-time.
+- 📱 **Antarmuka Pelanggan**: Menu digital yang responsif untuk memudahkan pelanggan memilih produk.
+- 🔐 **Autentikasi**: Sistem login aman menggunakan JWT dan Bcrypt.
+- 💳 **Integrasi QRIS**: Pembuatan kode QR untuk pembayaran non-tunai.
+- 🗄️ **Prisma ORM**: Manajemen database PostgreSQL yang efisien.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Persyaratan Minimum
+Sebelum memulai, pastikan Anda telah menginstal tools berikut:
+- **Node.js** (v18.0.0 atau lebih tinggi)
+- **PostgreSQL** (sebagai database utama)
+- **npm** (biasanya terpasang bersama Node.js) atau **yarn**
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Cara Instalasi
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Clone Repositori**
+   ```bash
+   git clone https://github.com/monsalman/UTS-DB.git
+   cd UTS-DB
+   ```
 
-## Learn More
+2. **Instal Dependensi**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. **Konfigurasi Environment Variables**
+   Salin file `.env.example` menjadi `.env` dan sesuaikan nilainya:
+   ```bash
+   cp .env.example .env
+   ```
+   Pastikan variabel berikut terisi di dalam `.env`:
+   ```env
+   DATABASE_URL="postgresql://user:password@localhost:5432/glowpos"
+   JWT_SECRET="your_secret_key"
+   CLOUDINARY_URL="cloudinary://api_key:api_secret@cloud_name"
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Setup Database**
+   Jalankan perintah Prisma untuk menghasilkan client dan melakukan sinkronisasi skema ke database:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. **Menjalankan Aplikasi**
+   Jalankan server pengembangan:
+   ```bash
+   npm run dev
+   ```
+   Buka [http://localhost:3000](http://localhost:3000) di browser Anda.
 
-## Deploy on Vercel
+## Scripts
+- `npm run dev` - Menjalankan aplikasi dalam mode pengembangan.
+- `npm run build` - Membuat build produksi.
+- `npm run start` - Menjalankan aplikasi hasil build produksi.
+- `npm run lint` - Mengecek kualitas kode dengan ESLint.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+Dikembangkan untuk kebutuhan proyek UTS Database.

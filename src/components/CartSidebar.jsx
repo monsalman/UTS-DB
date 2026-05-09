@@ -9,9 +9,18 @@ const CartSidebar = ({ tableId: initialTableId }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
+
+  useEffect(() => {
+    if (!user) {
+      setPaymentMethod('qris');
+    }
+  }, [user]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [tableInput, setTableInput] = useState(initialTableId || '');
   const [availableTables, setAvailableTables] = useState([]);
+  const [isManualInput, setIsManualInput] = useState(false);
+  const [showTableConfirm, setShowTableConfirm] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     fetchTables();
@@ -46,29 +55,23 @@ const CartSidebar = ({ tableId: initialTableId }) => {
     
     let finalTableId = tableInput || initialTableId;
 
-    if (user && finalTableId) {
+    if (!finalTableId) {
+      setShowAlert(true);
+      return;
+    }
+
+    if (user) {
       const exists = availableTables.find(t => t.table_number === finalTableId);
       if (!exists) {
-        const confirmAdd = window.confirm(`Table #${finalTableId} is not registered. Do you want to add it to the database?`);
-        if (confirmAdd) {
-          try {
-            const res = await fetch('/api/tables', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ table_number: finalTableId }),
-            });
-            if (!res.ok) throw new Error('Failed to create table');
-            await fetchTables();
-          } catch (err) {
-            alert(err.message);
-            return;
-          }
-        } else {
-          return;
-        }
+        setShowTableConfirm(true);
+        return;
       }
     }
 
+    await executeTransaction(finalTableId);
+  };
+
+  const executeTransaction = async (finalTableId) => {
     setLoading(true);
     try {
       const res = await fetch('/api/transactions', {
@@ -87,7 +90,10 @@ const CartSidebar = ({ tableId: initialTableId }) => {
       if (res.ok) {
         setShowSuccess(true);
         clearCart();
-        if (!initialTableId) setTableInput('');
+        if (!initialTableId) {
+          setTableInput('');
+          setIsManualInput(false);
+        }
       } else {
         alert(`Error: ${data.message}`);
       }
@@ -96,6 +102,23 @@ const CartSidebar = ({ tableId: initialTableId }) => {
       alert('Failed to place order');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmAddTable = async () => {
+    let finalTableId = tableInput || initialTableId;
+    try {
+      const res = await fetch('/api/tables', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table_number: finalTableId }),
+      });
+      if (!res.ok) throw new Error('Failed to create table');
+      await fetchTables();
+      setShowTableConfirm(false);
+      await executeTransaction(finalTableId);
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -133,21 +156,57 @@ const CartSidebar = ({ tableId: initialTableId }) => {
       {/* Table Selection for Staff only */}
       {user && !initialTableId && (
         <div style={{ padding: '0 30px 20px' }}>
-          <div className="glass" style={{ padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="glass" style={{ 
+            padding: '12px 16px', 
+            borderRadius: '12px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            border: '1px solid var(--border)' 
+          }}>
             <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>TABLE:</span>
-            <input 
-              type="text" 
-              placeholder="Enter table number..."
-              value={tableInput}
-              onChange={(e) => setTableInput(e.target.value)}
-              list="table-suggestions"
-              style={{ background: 'none', border: 'none', color: 'white', fontSize: '14px', outline: 'none', width: '100%', fontWeight: '600' }}
-            />
-            <datalist id="table-suggestions">
-              {availableTables.map(t => (
-                <option key={t.id} value={t.table_number} />
-              ))}
-            </datalist>
+            
+            {!isManualInput ? (
+              <select 
+                value={tableInput}
+                onChange={(e) => {
+                  if (e.target.value === 'NEW_TABLE') {
+                    setIsManualInput(true);
+                    setTableInput('');
+                  } else {
+                    setTableInput(e.target.value);
+                  }
+                }}
+                style={{ background: 'none', border: 'none', color: 'white', fontSize: '14px', outline: 'none', width: '100%', fontWeight: '600', cursor: 'pointer' }}
+              >
+                <option value="" disabled style={{ background: '#0f172a' }}>Select table...</option>
+                {availableTables.map(t => (
+                  <option key={t.id} value={t.table_number} style={{ background: '#0f172a' }}>
+                    Table #{t.table_number}
+                  </option>
+                ))}
+                <option value="NEW_TABLE" style={{ background: '#0f172a', color: 'var(--primary)', fontWeight: '700' }}>
+                  + Input New Table...
+                </option>
+              </select>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                <input 
+                  type="text" 
+                  placeholder="Enter number..."
+                  value={tableInput}
+                  autoFocus
+                  onChange={(e) => setTableInput(e.target.value)}
+                  style={{ background: 'none', border: 'none', color: 'white', fontSize: '14px', outline: 'none', width: '100%', fontWeight: '600' }}
+                />
+                <button 
+                  onClick={() => setIsManualInput(false)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -200,28 +259,34 @@ const CartSidebar = ({ tableId: initialTableId }) => {
                 { id: 'cash', label: 'Cash', icon: <Wallet size={14} /> },
                 { id: 'qris', label: 'QRIS', icon: <QrCode size={14} /> },
                 { id: 'edc', label: 'EDC', icon: <CardIcon size={14} /> }
-              ].map((method) => (
-                <button
-                  key={method.id}
-                  onClick={() => setPaymentMethod(method.id)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '8px',
-                    borderRadius: '10px',
-                    border: paymentMethod === method.id ? '2px solid var(--primary)' : '1px solid var(--border)',
-                    background: paymentMethod === method.id ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.02)',
-                    color: paymentMethod === method.id ? 'var(--primary)' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    transition: 'var(--transition)'
-                  }}
-                >
-                  {method.icon}
-                  <span style={{ fontSize: '10px', fontWeight: '600' }}>{method.label}</span>
-                </button>
-              ))}
+              ].map((method) => {
+                const isDisabled = !user && method.id !== 'qris';
+                return (
+                  <button
+                    key={method.id}
+                    disabled={isDisabled}
+                    onClick={() => setPaymentMethod(method.id)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '8px',
+                      borderRadius: '10px',
+                      border: paymentMethod === method.id ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      background: paymentMethod === method.id ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.02)',
+                      color: paymentMethod === method.id ? 'var(--primary)' : 'var(--text-muted)',
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDisabled ? 0.3 : 1,
+                      transition: 'var(--transition)',
+                      filter: isDisabled ? 'grayscale(1)' : 'none'
+                    }}
+                  >
+                    {method.icon}
+                    <span style={{ fontSize: '10px', fontWeight: '600' }}>{method.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -251,7 +316,74 @@ const CartSidebar = ({ tableId: initialTableId }) => {
       )}
       </div>
       <SuccessModal show={showSuccess} onClose={() => setShowSuccess(false)} />
+      <ConfirmModal 
+        show={showTableConfirm} 
+        tableNumber={tableInput || initialTableId}
+        onConfirm={handleConfirmAddTable}
+        onCancel={() => setShowTableConfirm(false)}
+      />
+      <AlertModal 
+        show={showAlert} 
+        message="Please select or input a table number first!"
+        onClose={() => setShowAlert(false)}
+      />
     </>
+  );
+};
+
+const AlertModal = ({ show, message, onClose }) => {
+  if (!show) return null;
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '20px' }}>
+      <div className="glass fade-in" style={{ width: '100%', maxWidth: '360px', padding: '40px 24px', borderRadius: '32px', textAlign: 'center' }}>
+        <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+          <X size={32} color="#ef4444" />
+        </div>
+        <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '12px' }}>Required Field</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '15px', lineHeight: '1.6', marginBottom: '32px' }}>
+          {message}
+        </p>
+        <button 
+          onClick={onClose}
+          className="btn-primary"
+          style={{ width: '100%', padding: '14px', borderRadius: '12px', fontWeight: '700' }}
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ConfirmModal = ({ show, tableNumber, onConfirm, onCancel }) => {
+  if (!show) return null;
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+      <div className="glass fade-in" style={{ width: '100%', maxWidth: '400px', padding: '40px 32px', borderRadius: '32px', textAlign: 'center' }}>
+        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+          <Plus size={40} color="var(--primary)" />
+        </div>
+        <h3 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '12px' }}>New Table?</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '15px', lineHeight: '1.6', marginBottom: '32px' }}>
+          Table <strong>#{tableNumber}</strong> is not registered. <br/>Would you like to add it to the database?
+        </p>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            onClick={onCancel}
+            style={{ flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid var(--border)', background: 'none', color: 'white', fontWeight: '600', cursor: 'pointer' }}
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={onConfirm}
+            className="btn-primary"
+            style={{ flex: 1, padding: '14px', borderRadius: '12px', fontWeight: '700' }}
+          >
+            Yes, Add Table
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
