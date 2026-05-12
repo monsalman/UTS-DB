@@ -109,8 +109,8 @@ export default function CustomerTablePage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {tx.items?.map((item, idx) => (
                           <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                            <span>{item.quantity}x {item.name}</span>
-                            <span style={{ color: 'var(--text-muted)' }}>Rp {(item.price * item.quantity).toLocaleString()}</span>
+                            <span>{(item.quantity || item.qty)}x {item.name}</span>
+                            <span style={{ color: 'var(--text-muted)' }}>Rp {((item.price || 0) * (item.quantity || item.qty || 0)).toLocaleString()}</span>
                           </div>
                         ))}
                       </div>

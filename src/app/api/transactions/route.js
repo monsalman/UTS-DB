@@ -14,6 +14,9 @@ export async function GET(request) {
       include: {
         employee: {
           select: { username: true }
+        },
+        table: {
+          select: { table_number: true, status: true }
         }
       }
     });

@@ -120,7 +120,7 @@ export default function TransactionHistory() {
                     </td>
                     <td style={{ padding: '20px', fontWeight: '600' }}>
                       <span style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
-                        #{tx.table_id || 'N/A'}
+                        {tx.table?.table_number || <span style={{ color: 'var(--text-muted)' }}>Walk-in</span>}
                       </span>
                     </td>
                     <td style={{ padding: '20px', fontSize: '14px' }}>
@@ -151,7 +151,7 @@ export default function TransactionHistory() {
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '4px' }}>
                     <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>#INV-{selectedTx.id.toString().padStart(5, '0')}</p>
                     <span style={{ fontSize: '12px', fontWeight: '700', background: 'var(--primary)', color: 'white', padding: '2px 8px', borderRadius: '4px' }}>
-                      Table #{selectedTx.table_id}
+                      {selectedTx.table?.table_number || 'Walk-in'}
                     </span>
                   </div>
                 </div>
@@ -193,8 +193,8 @@ export default function TransactionHistory() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '30vh', overflowY: 'auto' }}>
                   {selectedTx.items?.map((item, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '14px' }}>{item.quantity}x {item.name}</span>
-                      <span style={{ fontSize: '14px', fontWeight: '600' }}>Rp {(item.price * item.quantity).toLocaleString()}</span>
+                      <span style={{ fontSize: '14px' }}>{(item.quantity || item.qty)}x {item.name}</span>
+                      <span style={{ fontSize: '14px', fontWeight: '600' }}>Rp {((item.price || 0) * (item.quantity || item.qty || 0)).toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
