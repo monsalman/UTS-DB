@@ -29,7 +29,7 @@ export default function GenericCustomerPage() {
         </p>
 
         <div style={{ marginBottom: '32px' }}>
-          <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '16px' }}>Contoh QR Code Table #1:</p>
+          <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '16px' }}>Contoh QR Code Table #T-01:</p>
           <div style={{ 
             display: 'inline-block', 
             background: 'white', 
@@ -38,13 +38,13 @@ export default function GenericCustomerPage() {
             boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)'
           }}>
             <QRCodeSVG 
-              value={`${APP_URL}/customer/1`} 
+              value={`${APP_URL}/customer/T-01`} 
               size={200}
               level="H"
             />
           </div>
           <p style={{ fontSize: '13px', color: 'var(--primary)', marginTop: '12px' }}>
-            {APP_URL}/customer/1
+            {APP_URL}/customer/T-01
           </p>
         </div>
 
